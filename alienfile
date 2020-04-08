@@ -1,0 +1,47 @@
+# -*- mode: perl; -*-
+use alienfile;
+use Path::Tiny ();
+use lib Path::Tiny->new(__FILE__)->sibling('lib')->stringify;
+use POSIX ();
+
+plugin 'Probe::CommandLine' => (command => 'node', args => ['--version']);
+
+share {
+  start_url 'https://nodejs.org/dist';
+
+  _download_args();
+
+  plugin 'Prefer::LTSVersion';
+
+  plugin Download => @{meta_prop->{node_download_args}};
+
+  plugin Extract => meta_prop->{node_ext};
+
+  plugin 'Build::Copy';
+
+};
+
+gather [
+  [ 'node --version', \ '%{.runtime.version}' ],
+  [ 'npm --version',  \ '%{.runtime.node_npm_version}' ],
+];
+
+sub _download_args {
+  my $build = shift;
+  my ($name, $os, $arch, $ext) = ('node', $^O, (POSIX::uname())[4], 'tar.xz');
+
+  ($os, $ext) = ('win', '7z') if ($os eq 'MSWin32');
+  $arch = 'x64'
+    if (($os eq 'darwin')
+    || ($os eq 'linux' && $arch eq 'x86_64')
+    || ($os eq 'sunos'));
+  $arch = 'ppc64' if ($os eq 'aix');
+
+  my $filter  = qr/^\Q$name\E\-v[0-9\.]+\-\Q$os\E\-\Q$arch\E\.\Q$ext\E/;
+  my $version = qr/^\Q$name\E\-(v[0-9\.]+)\-\Q$os\E\-\Q$arch\E\.\Q$ext\E/;
+
+  my $meta = meta_prop;
+  @{$meta}{qw(node_os node_arch node_ext)} = ($os, $arch, $ext);
+  $meta->{node_download_args} = [filter => $filter, version => $version];
+}
+

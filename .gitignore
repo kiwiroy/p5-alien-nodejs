@@ -1,0 +1,7 @@
+Makefile.old
+MYMETA.json
+MYMETA.yml
+_alien
+blib
+local/
+pm_to_blib
