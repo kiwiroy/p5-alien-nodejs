@@ -5,8 +5,6 @@ use warnings;
 use Alien::Build::Plugin;
 use POSIX ();
 
-use Data::Dumper;
-
 has filter         =>;
 has latest_filter  => qr/^latest\-v[0-9]+\.x$/;
 has latest_version => qr/([0-9]+)/;
